@@ -71,9 +71,17 @@ def get_latest_measurement(device_id):
 
 
 def get_measurements_for_device(device_id):
-    # TODO M1:
-    # Implementera historik för en sensor.
-    return []
+    query = """
+        SELECT id, device_id, temperature, humidity, battery, created_at
+        FROM measurements
+        WHERE device_id = %s
+        ORDER BY created_at DESC
+        LIMIT 100;
+    """
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, (device_id,))
+            return [_json_ready(row) for row in cur.fetchall()]
 
 
 def insert_measurement(data):
