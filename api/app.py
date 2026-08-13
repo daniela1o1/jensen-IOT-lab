@@ -45,19 +45,19 @@ def measurements():
 
 @app.get("/devices/<device_id>/latest")
 def latest(device_id):
-    # TODO M1:
-    # Läs senaste mätningen från PostgreSQL med get_latest_measurement(...).
-    # Returnera 404 om sensorn eller en mätning saknas.
-    #
-    # TODO M2:
-    # Utöka M1-lösningen med cache-aside:
-    # 1. Försök läsa från Redis.
-    # 2. Vid cache miss: läs från PostgreSQL.
-    # 3. Spara databasresultatet i Redis.
-    return jsonify({
-        "message": "TODO: implementera latest measurement",
-        "deviceId": device_id
-    }), 501
+    if not device_exists(device_id):
+        return jsonify({
+            "error": "device not found"
+        }), 404
+
+    measurement = get_latest_measurement(device_id)
+
+    if measurement is None:
+        return jsonify({
+            "error": "measurement not found"
+        }), 404
+
+    return jsonify(measurement), 200
 
 
 @app.get("/devices/<device_id>/measurements")
