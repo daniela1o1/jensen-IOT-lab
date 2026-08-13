@@ -85,10 +85,10 @@ def create_measurement():
             "errors": ["unknown deviceId"]
         }), 400
 
-    insert_measurement(data)
+    measurement = insert_measurement(data)
     
     print(f"VALID measurement received: {data}")
-    return jsonify({"status": "accepted", "measurement": data}), 202
+    return jsonify({"status": "accepted", "measurement": measurement}), 201
 
 
 @app.get("/statistics")

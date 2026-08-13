@@ -98,11 +98,12 @@ def insert_measurement(data):
     INSERT INTO measurements
         (device_id, temperature, humidity, battery)
     VALUES
-        (%s, %s, %s, %s);
+        (%s, %s, %s, %s)
+    RETURNING id, device_id, temperature, humidity, battery, created_at;
     """
 
     with get_connection() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(
                 query,
                 (
@@ -112,3 +113,4 @@ def insert_measurement(data):
                     data.get("battery"),
                 ),
             )
+            return _json_ready(cur.fetchone())
