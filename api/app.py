@@ -62,13 +62,13 @@ def latest(device_id):
 
 @app.get("/devices/<device_id>/measurements")
 def device_history(device_id):
-    # TODO M1:
-    # Hämta sensorhistorik från PostgreSQL.
-    # Känd sensor utan mätningar: 200 och []. Okänd sensor: 404.
-    return jsonify({
-        "message": "TODO: implementera device history",
-        "deviceId": device_id
-    }), 501
+    if not device_exists(device_id):
+        return jsonify({
+            "error": "device not found"
+        }), 404
+
+    history = get_measurements_for_device(device_id)
+    return jsonify(history), 200
 
 
 @app.post("/measurements")
