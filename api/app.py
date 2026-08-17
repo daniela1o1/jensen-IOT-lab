@@ -50,12 +50,19 @@ def latest(device_id):
             "error": "device not found"
         }), 404
 
+    cached = get_latest_from_cache(device_id)
+
+    if cached is not None:
+        return jsonify(cached), 200
+
     measurement = get_latest_measurement(device_id)
 
     if measurement is None:
         return jsonify({
             "error": "measurement not found"
         }), 404
+
+    set_latest_in_cache(device_id, measurement)
 
     return jsonify(measurement), 200
 
@@ -86,9 +93,11 @@ def create_measurement():
         }), 400
 
     measurement = insert_measurement(data)
+
+    set_latest_in_cache(data["deviceId"], measurement)
     
     print(f"VALID measurement received: {data}")
-    return jsonify({"status": "accepted", "measurement": measurement}), 201
+    return jsonify({"status": "created", "measurement": measurement}), 201
 
 
 @app.get("/statistics")
