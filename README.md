@@ -122,6 +122,12 @@ docker compose down -v
 
 Fortsätt nu till [docs/lab-guide.md](docs/lab-guide.md) och genomför milstolparna i ordning.
 
+## SQL queries
+
+De obligatoriska SQL-frågorna för totalt antal mätningar, medeltemperatur
+och mätningar från de senaste 24 timmarna finns i
+[`database/queries.sql`](database/queries.sql).
+
 ## Om starten misslyckas
 
 - Kontrollera att Docker Desktop/Docker Engine körs med `docker info`.
