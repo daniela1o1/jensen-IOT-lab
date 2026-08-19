@@ -1,16 +1,22 @@
-# Reflektionsdokument – obligatorisk leverabel
+# Reflektionsdokument 
 
-Svara kort men motiverat på samtliga frågor. Knyt svaren till vad du implementerade och observerade i laborationen; enstaka ja/nej-svar är inte tillräckliga. Ersätt instruktionstexten med dina svar före inlämning.
-
-1. Varför ska sensorerna kommunicera med ett API i stället för direkt med PostgreSQL?
-2. Varför ska felaktig sensordata stoppas innan den sparas?
-3. Varför passar PostgreSQL för historiska mätvärden?
-4. Vad händer med lösningen om Redis försvinner?
-5. Vad händer med lösningen om PostgreSQL försvinner?
-6. Varför används Docker Compose lokalt?
-7. Vad automatiserar din CI-pipeline?
-8. Vad observerade du när du tog bort en Kubernetes Pod?
-9. Varför kan flera repliker ge högre tillgänglighet?
-10. När hade Kubernetes varit overkill för en lösning?
-
-Spara svaren i denna fil. Arkitekturdiagrammet lämnas separat enligt `docs/architecture.md`.
+## 1. Varför ska sensorerna kommunicera med ett API i stället för direkt med PostgreSQL?
+Sensorerna bör kommunicera med ett API eftersom det skapar ett kontrollerat lager mellan sensorerna och databasen. API:t kan validera inkommande data, kontrollera att sensorn är registrerad och bestämma vad som får sparas innan något når PostgreSQL. Sensorerna behöver då inte heller känna till databasens struktur eller ha direkt åtkomst till databasen vilket även minskar exponeringen av databasen och kan förbättra säkerheten. I laborationen såg jag detta när felaktiga mätningar stoppades av API:t med **400 Bad Request** istället för att sparas. 
+## 2. Varför ska felaktig sensordata stoppas innan den sparas?
+Felaktig sensordata bör stoppas innan den sparas för att databasen ska innehålla tillförlitliga och användbara mätvärden. Om exempelvis obligatoriska fält saknas eller värden har fel datatyp kan det annars skapa problem när datan senare hämtas eller analyseras. I laborationen valideras därför mätningen i API:t innan den skickas till PostgreSQL. Ogiltiga mätningar stoppas och returnerar **400 Bad Request**, medan endast giltiga mätningar lagras.
+## 3. Varför passar PostgreSQL för historiska mätvärden?
+Datan kan lagras persistent och strukturerat över tid i PostgreSQL. Mätningarna i laborationen har ett tydligt schema med bl.a. sensor-ID, temperatur, batterinivå och tidsstämpel. Med SQL går det enkelt att söka och analysera historiken, exempelvis genom att räkna antal mätningar, beräkna medeltemperatur eller hämta mätningar från de senaste 24 timmarna. I laborationen verifierade jag också att mätningarna fanns kvar efter att Docker-Compose-miljön stoppats och startats igen.
+## 4. Vad händer med lösningen om Redis försvinner?
+Redis används endast som cache och innehåller därför inte den enda kopian av mätdata. Om cacheinnehållet försvinner finns mätningarna fortfarande kvar i PostgreSQL. Vid nästa anrop efter en cache miss kan API:t hämta den senaste mätningen från PostgreSQL och lägga tillbaka den i Redis. Det gör att PostgreSQL fungerar som systemets beständiga datakälla medan Redis främst används för snabbare åtkomst till senaste mätvärdet. Om själva Redis-tjänsten däremot är otillgänglig kan cacheberoende anrop påverkas eftersom laborationen inte implementerar fullständig felhantering för ett Redis-avbrott.
+## 5. Vad händer med lösningen om PostgreSQL försvinner?
+Om PostgreSQL försvinner påverkas lösningen betydligt mer än om Redis-cachen töms, eftersom PostgreSQL är systemets beständiga datakälla. Nya mätningar kan inte lagras och historiska mätningar kan inte hämtas. API:t använder även PostgreSQL för information om registrerade sensorer. Redis kan fortfarande innehålla vissa cachade senaste mätvärden, men eftersom cachen inte innehåller hela historiken kan den inte ersätta PostgreSQL. Ett avbrott i databasen innebär i detta fall att stora delar av systemets funktionalitet inte längre fungerar.
+## 6. Varför används Docker Compose lokalt?
+Docker Compose används för att lätt kunna köra flera tjänster tillsammans i en gemensam och reproducerbar lokal miljö. I laborationen består miljön av API, simulator, PostgreSQL och Redis, som kan byggas och startas tillsammans med ett enda kommando. Compose hanterar även bl.a. nätverk, miljövariabler, portar och persistent lagring mellan tjänsterna. Det gjorde att jag kunde köra hela lösningen lokalt utan att installera PostgreSQL och Redis direkt på datorn.
+## 7. Vad automatiserar din CI-pipeline?
+CI-pipelinen automatiserar kontrollen av att projektet fortfarande funkar efter en kodändring. Vid en **git push** checkas koden ut, Python 3.12 konfigureras, projektets dependencies installeras och de automatiserade testerna körs med **pytest**. Efter det byggs även API:ts Docker-image för att verifiera att den fortfarande går att bygga. På så vis upptäcks exempelvis trasiga tester eller byggfel automatiskt efter en push.
+## 8. Vad observerade du när du tog bort en Kubernetes Pod?
+När jag manuellt tog bort en av poddarna observerade jag att Kubernetes automatiskt skapade en ny pod som ersättning. Deploymenten var konfigurerad med ett önskat tillstånd på tre repliker, och när antalet tillfälligt sjönk till två såg Kubernetes till att tre poddar kördes igen. Detta demonstrerade Kubernetes self-healing och hur systemet kontinuerligt försöker få det faktiska tillståndet att motsvara det önskade tillståndet.
+## 9. Varför kan flera repliker ge högre tillgänglighet?
+Flera repliker kan ge högre tillgänglighet eftersom tjänsten inte blir beroende av en enda pod. Om en av flera API-poddar försvinner kan de andra fortsätta ta emot trafik medan Kubernetes skapar en ersättande pod. I laborationen kördes API:t med tre repliker, och vid self-healing-testet kunde jag se hur Kubernetes återställde antalet poddar efter att en tagits bort. Flera repliker skyddar däremot inte mot alla typer av fel, exempelvis om ett gemensamt beroende såsom PostgreSQL blir otillgängligt.
+## 10. När hade Kubernetes varit overkill för en lösning?
+Kubernetes kan vara overkill för en mindre lösning med få tjänster, låg belastning och/eller begränsade krav på skalning och hög tillgänglighet. Kubernetes erbjuder funktioner såsom orchestration, scaling och self-healing, men innebär samtidigt mer konfiguration och komplexitet. För en mindre lokal lösning kan exempelvis Docker Compose vara tillräckligt och enklare att hantera. Kubernetes blir mer motiverat när systemet växer och det finns ett verkligt behov av att hantera flera instanser, hög tillgänglighet eller skalning.
