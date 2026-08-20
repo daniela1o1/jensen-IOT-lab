@@ -37,12 +37,9 @@ REST API:t erbjuder följande endpoints:
 | `POST` | `/measurements` | Validerar och lagrar en ny mätning i PostgreSQL. |
 | `GET` | `/statistics` | Returnerar antal sensorer, antal mätningar och medeltemperatur. |
 
-Giltiga mätningar som skickas till `POST /measurements` lagras i PostgreSQL och
-returnerar HTTP-status `201 Created`. Ogiltig data eller ett okänt sensor-ID
-returnerar `400 Bad Request`.
+Giltiga mätningar som skickas till `POST /measurements` lagras i PostgreSQL och returnerar HTTP-status `201 Created`. Ogiltig data eller ett okänt sensor-ID returnerar `400 Bad Request`.
 
-API:t returnerar `404 Not Found` när en efterfrågad sensor inte finns. För en
-känd sensor utan mäthistorik returneras en tom lista med `200 OK`.
+API:t returnerar `404 Not Found` när en efterfrågad sensor inte finns. För en känd sensor utan mäthistorik returneras en tom lista med `200 OK`.
 
 ## Teknik
 
@@ -135,8 +132,7 @@ docker compose exec api python -m pytest -q
 ```
 Testerna verifierar bland annat valideringen av inkommande mätdata, exempelvis obligatoriska fält och korrekta datatyper.
 
-Databas-, cache- och API-flöden har även verifierats manuellt genom anrop mot
-API:t och kontroll av data i PostgreSQL och Redis.
+Databas-, cache- och API-flöden har även verifierats manuellt genom anrop mot API:t och kontroll av data i PostgreSQL och Redis.
 
 ## SQL-frågor
 
