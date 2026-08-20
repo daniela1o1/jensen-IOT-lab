@@ -155,6 +155,36 @@ PostgreSQL-klienten kan öppnas med:
 docker compose exec db psql -U student -d jensen_iot
 ```
 
+## Fördjupningsuppgifter
+
+Som fördjupning har två uppgifter implementerats: en statistik-endpoint och en SQL-analys av sensordata.
+
+### Statistik-endpoint
+
+Endpointen `GET /statistics` hämtar sammanställd statistik från PostgreSQL och returnerar:
+
+- antal registrerade sensorer
+- totalt antal lagrade mätningar
+- medeltemperatur för samtliga mätningar
+
+Exempel:
+
+```json
+{
+    "average_temperature": 21.4,
+    "device_count": 3,
+    "measurement_count": 49787
+}
+```
+
+### SQL-analys -sensor med högst medeltemperatur
+
+En SQL-analys har implementerats för att identifiera sensorn med högst medeltemperatur. Mätningarna grupperas per sensor med `GROUP BY`. Medeltemperaturen beräknas med `AVG()` och resultatet sorteras i fallande ordning med `ORDER BY`.
+
+Endast sensorn med högst medeltemperatur returneras med `LIMIT 1`.
+
+SQL-frågan finns i: [`database/queries.sql`](database/queries.sql)
+
 ## Continuous Integration
 
 Projektet använder GitHub Actions för Continuous Integration (CI).

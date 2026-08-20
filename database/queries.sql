@@ -10,3 +10,12 @@ FROM measurements;
 SELECT *
 FROM measurements
 WHERE created_at >= NOW() - INTERVAL '24 hours';
+
+-- Sensor med högst medeltemperatur 
+SELECT
+    device_id,
+    AVG(temperature) AS average_temperature
+FROM measurements
+GROUP BY device_id
+ORDER BY average_temperature DESC
+LIMIT 1;
