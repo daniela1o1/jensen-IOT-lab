@@ -114,3 +114,35 @@ def insert_measurement(data):
                 ),
             )
             return _json_ready(cur.fetchone())
+
+def get_statistics():
+    query = """
+        SELECT
+            COUNT(*) AS measurement_count,
+            AVG(temperature) AS average_temperature
+        FROM measurements;
+    """
+
+    device_query = """
+        SELECT COUNT (*) AS device_count
+        FROM devices;
+    """
+
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query)
+            row = cur.fetchone()
+
+            cur.execute(device_query)
+            device_row = cur.fetchone()
+
+            average_temperature = row["average_temperature"]
+
+            if isinstance(average_temperature, Decimal):
+                average_temperature = float(average_temperature)
+
+            return {
+                "device_count": device_row["device_count"],
+                "measurement_count": row["measurement_count"],
+                "average_temperature": round(average_temperature, 2),
+            }

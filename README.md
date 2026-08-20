@@ -35,6 +35,7 @@ REST API:t erbjuder följande endpoints:
 | `GET` | `/devices/{id}/measurements` | Hämtar mäthistorik för en specifik sensor. |
 | `GET` | `/devices/{id}/latest` | Hämtar den senaste mätningen för en sensor, med Redis-cache. |
 | `POST` | `/measurements` | Validerar och lagrar en ny mätning i PostgreSQL. |
+| `GET` | `/statistics` | Returnerar antal sensorer, antal mätningar och medeltemperatur. |
 
 Giltiga mätningar som skickas till `POST /measurements` lagras i PostgreSQL och
 returnerar HTTP-status `201 Created`. Ogiltig data eller ett okänt sensor-ID
